@@ -426,8 +426,8 @@ public class TextField extends Widget implements Disableable {
 			fontOffset = 0;
 		glyphPositions.add(x);
 
-		visibleTextStart = Math.min(visibleTextStart, glyphPositions.size);
-		visibleTextEnd = MathUtils.clamp(visibleTextEnd, visibleTextStart, glyphPositions.size);
+		visibleTextStart = Math.min(visibleTextStart, glyphPositions.size - 1);
+		visibleTextEnd = MathUtils.clamp(visibleTextEnd, visibleTextStart, glyphPositions.size - 1);
 
 		if (selectionStart > newDisplayText.length()) selectionStart = textLength;
 	}
@@ -512,7 +512,7 @@ public class TextField extends Widget implements Disableable {
 			TextField textField = current.findNextTextField(stage.getActors(), null, bestCoords, currentCoords, up);
 			if (textField == null) { // Try to wrap around.
 				if (up)
-					currentCoords.set(Float.MIN_VALUE, Float.MIN_VALUE);
+					currentCoords.set(-Float.MAX_VALUE, -Float.MAX_VALUE);
 				else
 					currentCoords.set(Float.MAX_VALUE, Float.MAX_VALUE);
 				textField = current.findNextTextField(stage.getActors(), null, bestCoords, currentCoords, up);

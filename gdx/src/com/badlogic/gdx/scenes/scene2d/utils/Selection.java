@@ -35,7 +35,7 @@ public class Selection<T> implements Disableable, Iterable<T> {
 		if (isDisabled) return;
 		snapshot();
 		try {
-			if ((toggle || (!required && selected.size == 1) || UIUtils.ctrl()) && selected.contains(item)) {
+			if (((toggle && !required && selected.size == 1) || UIUtils.ctrl()) && selected.contains(item)) {
 				if (required && selected.size == 1) return;
 				selected.remove(item);
 				lastSelected = null;
@@ -227,6 +227,7 @@ public class Selection<T> implements Disableable, Iterable<T> {
 		}
 	}
 
+	/** @param item May be null (returns false). */
 	public boolean contains (T item) {
 		if (item == null) return false;
 		return selected.contains(item);

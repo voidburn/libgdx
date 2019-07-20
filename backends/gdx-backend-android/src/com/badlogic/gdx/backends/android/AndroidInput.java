@@ -31,6 +31,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Handler;
+import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.service.wallpaper.WallpaperService.Engine;
 import android.view.MotionEvent;
@@ -128,8 +129,7 @@ public class AndroidInput implements Input, OnKeyListener, OnTouchListener {
 	final Context context;
 	protected final AndroidTouchHandler touchHandler;
 	private int sleepTime = 0;
-	private boolean catchBack = false;
-	private boolean catchMenu = false;
+	private IntSet keysToCatch = new IntSet();
 	protected final Vibrator vibrator;
 	private boolean compassAvailable = false;
 	private boolean rotationVectorAvailable = false;
@@ -144,7 +144,7 @@ public class AndroidInput implements Input, OnKeyListener, OnTouchListener {
 	private InputProcessor processor;
 	private final AndroidApplicationConfiguration config;
 	protected final Orientation nativeOrientation;
-	private long currentEventTimeStamp = System.nanoTime();
+	private long currentEventTimeStamp = 0;
 	private final AndroidOnscreenKeyboard onscreenKeyboard;
 
 	private SensorEventListener accelerometerListener;
@@ -185,6 +185,10 @@ public class AndroidInput implements Input, OnKeyListener, OnTouchListener {
 		} else {
 			nativeOrientation = Orientation.Portrait;
 		}
+
+		// this is for backward compatibility: libGDX always caught the circle button, original comment:
+		// circle button on Xperia Play shouldn't need catchBack == true
+		keysToCatch.add(Keys.BUTTON_CIRCLE);
 	}
 
 	@Override
@@ -504,6 +508,12 @@ public class AndroidInput implements Input, OnKeyListener, OnTouchListener {
 		for (int i = 0, n = keyListeners.size(); i < n; i++)
 			if (keyListeners.get(i).onKey(v, keyCode, e)) return true;
 
+		// If the key is held sufficiently long that it repeats, then the initial down is followed
+		// additional key events with ACTION_DOWN and a non-zero value for getRepeatCount().
+		// We are only interested in the first key down event here and must ignore all others
+		if (e.getAction() == android.view.KeyEvent.ACTION_DOWN && e.getRepeatCount() > 0)
+			return keysToCatch.contains(keyCode);
+
 		synchronized (this) {
 			KeyEvent event = null;
 
@@ -583,11 +593,7 @@ public class AndroidInput implements Input, OnKeyListener, OnTouchListener {
 			app.getGraphics().requestRendering();
 		}
 
-		// circle button on Xperia Play shouldn't need catchBack == true
-		if (keyCode == Keys.BUTTON_CIRCLE) return true;
-		if (catchBack && keyCode == android.view.KeyEvent.KEYCODE_BACK) return true;
-		if (catchMenu && keyCode == android.view.KeyEvent.KEYCODE_MENU) return true;
-		return false;
+		return keysToCatch.contains(keyCode);
 	}
 
 	@Override
@@ -609,32 +615,52 @@ public class AndroidInput implements Input, OnKeyListener, OnTouchListener {
 
 	@Override
 	public void setCatchBackKey (boolean catchBack) {
-		this.catchBack = catchBack;
+		setCatchKey(Keys.BACK, catchBack);
 	}
 
 	@Override
 	public boolean isCatchBackKey() {
-		return catchBack;
+		return keysToCatch.contains(Keys.BACK);
 	}
 
 	@Override
 	public void setCatchMenuKey (boolean catchMenu) {
-		this.catchMenu = catchMenu;
+		setCatchKey(Keys.MENU, catchMenu);
 	}
-	
+
 	@Override
 	public boolean isCatchMenuKey () {
-		return catchMenu;
+		return keysToCatch.contains(Keys.MENU);
+	}
+
+	@Override
+	public void setCatchKey (int keycode, boolean catchKey) {
+		if (!catchKey) {
+			keysToCatch.remove(keycode);
+		} else if (catchKey) {
+			keysToCatch.add(keycode);
+		}
+	}
+
+	@Override
+	public boolean isCatchKey (int keycode) {
+		return keysToCatch.contains(keyCount);
 	}
 
 	@Override
 	public void vibrate (int milliseconds) {
-		vibrator.vibrate(milliseconds);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+			vibrator.vibrate(VibrationEffect.createOneShot(milliseconds, VibrationEffect.DEFAULT_AMPLITUDE));
+		else
+			vibrator.vibrate(milliseconds);
 	}
 
 	@Override
 	public void vibrate (long[] pattern, int repeat) {
-		vibrator.vibrate(pattern, repeat);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+			vibrator.vibrate(VibrationEffect.createWaveform(pattern, repeat));
+		else
+			vibrator.vibrate(pattern, repeat);
 	}
 
 	@Override

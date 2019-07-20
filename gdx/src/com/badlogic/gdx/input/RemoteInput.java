@@ -507,6 +507,15 @@ public class RemoteInput implements Runnable, Input {
 		return false;
 	}
 
+	@Override
+	public void setCatchKey (int keycode, boolean catchKey) {
+
+	}
+
+	@Override
+	public boolean isCatchKey (int keycode) {
+		return false;
+	}
 
 	@Override
 	public void setInputProcessor (InputProcessor processor) {

@@ -573,7 +573,6 @@ public class ScrollPane extends WidgetGroup {
 		}
 	}
 
-	@Override
 	public void draw (Batch batch, float parentAlpha) {
 		if (widget == null) return;
 
@@ -649,12 +648,15 @@ public class ScrollPane extends WidgetGroup {
 
 	public float getPrefWidth () {
 		float width = 0;
-		if (widget instanceof Layout) {
-			validate();
+		if (widget instanceof Layout)
 			width = ((Layout)widget).getPrefWidth();
-		} else if (widget != null) //
+		else if (widget != null) //
 			width = widget.getWidth();
-		if (style.background != null) width += style.background.getLeftWidth() + style.background.getRightWidth();
+
+		Drawable background = style.background;
+		if (background != null)
+			width = Math.max(width + background.getLeftWidth() + background.getRightWidth(), background.getMinWidth());
+
 		if (scrollY) {
 			float scrollbarWidth = 0;
 			if (style.vScrollKnob != null) scrollbarWidth = style.vScrollKnob.getMinWidth();
@@ -666,12 +668,15 @@ public class ScrollPane extends WidgetGroup {
 
 	public float getPrefHeight () {
 		float height = 0;
-		if (widget instanceof Layout) {
-			validate();
+		if (widget instanceof Layout)
 			height = ((Layout)widget).getPrefHeight();
-		} else if (widget != null) //
+		else if (widget != null) //
 			height = widget.getHeight();
-		if (style.background != null) height += style.background.getTopHeight() + style.background.getBottomHeight();
+
+		Drawable background = style.background;
+		if (background != null)
+			height = Math.max(height + background.getTopHeight() + background.getBottomHeight(), background.getMinHeight());
+
 		if (scrollX) {
 			float scrollbarHeight = 0;
 			if (style.hScrollKnob != null) scrollbarHeight = style.hScrollKnob.getMinHeight();
@@ -749,6 +754,12 @@ public class ScrollPane extends WidgetGroup {
 		if (actor != widget) return false;
 		this.widget = null;
 		return super.removeActor(actor, unfocus);
+	}
+
+	public Actor removeActorAt (int index, boolean unfocus) {
+		Actor actor = super.removeActorAt(index, unfocus);
+		if (actor == widget) this.widget = null;
+		return actor;
 	}
 
 	public Actor hit (float x, float y, boolean touchable) {

@@ -302,6 +302,13 @@ public class Table extends WidgetGroup {
 		return true;
 	}
 
+	public Actor removeActorAt (int index, boolean unfocus) {
+		Actor actor = super.removeActorAt(index, unfocus);
+		Cell cell = getCell(actor);
+		if (cell != null) cell.actor = null;
+		return actor;
+	}
+
 	/** Removes all actors and cells from the table. */
 	public void clearChildren () {
 		Array<Cell> cells = this.cells;
@@ -698,7 +705,7 @@ public class Table extends WidgetGroup {
 		this.skin = skin;
 	}
 
-	/** If true (the default), positions and sizes are rounded to integers. */
+	/** If true (the default), positions and sizes of child actors are rounded to integers. */
 	public void setRound (boolean round) {
 		this.round = round;
 	}

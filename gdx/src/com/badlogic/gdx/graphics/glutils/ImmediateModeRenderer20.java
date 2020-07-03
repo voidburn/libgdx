@@ -99,6 +99,10 @@ public class ImmediateModeRenderer20 implements ImmediateModeRenderer {
 		ownsShader = false;
 	}
 
+	public ShaderProgram getShader () {
+		return shader;
+	}
+
 	public void begin (Matrix4 projModelView, int primitiveType) {
 		this.projModelView.set(projModelView);
 		this.primitiveType = primitiveType;
@@ -143,13 +147,12 @@ public class ImmediateModeRenderer20 implements ImmediateModeRenderer {
 
 	public void flush () {
 		if (numVertices == 0) return;
-		shader.begin();
+		shader.bind();
 		shader.setUniformMatrix("u_projModelView", projModelView);
 		for (int i = 0; i < numTexCoords; i++)
 			shader.setUniformi(shaderUniformNames[i], i);
 		mesh.setVertices(vertices, 0, vertexIdx);
 		mesh.render(shader, primitiveType);
-		shader.end();
 
 		numSetTexCoords = 0;
 		vertexIdx = 0;

@@ -195,7 +195,7 @@ public class FloatArray {
 		return -1;
 	}
 
-	public int lastIndexOf (char value) {
+	public int lastIndexOf (float value) {
 		float[] items = this.items;
 		for (int i = size - 1; i >= 0; i--)
 			if (items[i] == value) return i;
@@ -372,7 +372,7 @@ public class FloatArray {
 		float[] items = this.items;
 		int h = 1;
 		for (int i = 0, n = size; i < n; i++)
-			h = h * 31 + Float.floatToIntBits(items[i]);
+			h = h * 31 + NumberUtils.floatToRawIntBits(items[i]);
 		return h;
 	}
 
